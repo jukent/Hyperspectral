@@ -12,7 +12,8 @@ def plot_all_LRT(LRT_dict,hysics_dict):
     plt.xlim([450,2200])
     plt.xlabel('Wavlength (nm)',fontsize=18)
     plt.ylabel('Radiance (W/m^2/nm/sr)',fontsize=18)
-    plt.title('Thin Water Cloud Radiance',fontsize=25)
+    tt = 'Thin Water Cloud Radiance' if hysics_dict['phase']=='Liquid Water' else 'Thick Ice Cloud Radiance'
+    plt.title(tt,fontsize=25)
     label_size = 20
     plt.rcParams['xtick.labelsize'] = label_size
     plt.rcParams['ytick.labelsize'] = label_size
@@ -33,7 +34,7 @@ def chi_sq_contour(analysis_dict):
     plt.ylabel('Cloud Optical Thickness (COT)',fontsize=18)
     plt.ylim([0,10])
     plt.xlim([0,30])
-    plt.title('Thin Water Cloud {} Wavelength Retrieval Values'.format(str(analysis_dict['num_retrieval_wavelengths'])),fontsize=20)
+    plt.title(analysis_dict['phase']+' Cloud {} Wavelength Retrieval Values'.format(str(analysis_dict['num_retrieval_wavelengths'])),fontsize=20)
     plt.clabel(b, inline=1, fontsize=15)
     
     reff_best = analysis_dict['best_reff']
@@ -73,8 +74,8 @@ def plot_algorithm_comparison(dict_of_analysis_dicts):
     ax2.tick_params(axis='y', labelcolor=color)
     
     fig.tight_layout()
-    plt.title('Change in Cloud Microphysical Parameters with '+ \
-        'Number of Wavelengths in Retrieval Algorithm',fontsize=25)
+    plt.title('Cloud Microphysical Parameters from Different '+ \
+        'Retrieval Algorithms for '+d['phase']+' Cloud',fontsize=25)
     plt.show()
     return;
     
@@ -84,20 +85,18 @@ def plot_best_fits(hysics_dict, LRT_dict, dict_of_analysis_dicts):
     plt.xlim([440,2210])
     plt.xlabel('Wavlength (nm)',fontsize=18)
     plt.ylabel('Radiance (W/m^2/nm/sr)',fontsize=18)
-    plt.title('Thin Water Clouds -  Best Fits',fontsize=25)
+    plt.title(hysics_dict['phase']+' Cloud -  Best Fits',fontsize=25)
             
     plt.plot(hysics_dict['wl'],hysics_dict['data'],'black',label='HySICS')
     
     for k in dict_of_analysis_dicts.keys():
         d = dict_of_analysis_dicts[k]
-        reff = d['r_eff']
-        COT = d['COT']
         
-        label ='COT: '+str(round(d['best_COT']',2))+'  \
-            r_eff: '+str(d['best_reff'_best')+'um -- '+ \
+        label ='COT: '+str(round(d['best_COT'],2))+ \
+            'r_eff: '+str(d['best_reff'])+'um -- '+ \
                 str(d['num_retrieval_wavelengths'])+'  Wavelengths Algorithm: '+ \
                     '%.2f'%d['best_difference']+'%'
-        plt.plot(LRT_dict['wl'],LRT_dict['data'][idx],label=label)        
+        plt.plot(LRT_dict['wl'],LRT_dict['data'][d['best_index']],label=label)        
         [plt.axvline(w,linestyle='--') for w in np.ravel(d['retrieval_wavelengths'])]     
     
     plt.legend(fontsize=20)

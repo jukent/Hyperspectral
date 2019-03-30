@@ -21,7 +21,7 @@ def calc_HySICS_reflectance(hysics_dict,solar_dict):
 
 
 def calc_LRT_reflectance(hysics_dict,solar_dict,file):   
-    (x,y) = rd.read_LRT(file)
+    (x,y) = rd.read_LRT(file,hysics_dict['phase'])
     f = interp1d(x,y)
     ynew = f(hysics_dict['wl'])
     refl_LRT = [np.pi*ynew[w]/solar_dict['flux_interp'][w] \
@@ -40,7 +40,7 @@ def find_retrieval_wavelengths(num_wl):
     return wl_list;
 
 
-def disagreement_algorithm(hysics_dict, solar_dict, wl_num, wl_list, path, file):  
+def disagreement_algorithm(hysics_dict, solar_dict, wl_num, wl_list, path, file, verbose_path):  
     refl_LRT = calc_LRT_reflectance(hysics_dict,solar_dict,path+'/'+file)
     idx_1 = (np.abs(hysics_dict['wl'] - wl_list[0][0])).argmin()
     
@@ -65,20 +65,22 @@ def disagreement_algorithm(hysics_dict, solar_dict, wl_num, wl_list, path, file)
     
     diff = np.sqrt(chi_sq)*100
     
-    reff = file.split('_')[3][1:]
-    verbosefile = 'Verbose/'+file[0:-4]+'_550nm_verbose.txt'
-    tau = rd.read_verbose(verbosefile)
+    fs = file.split('_')
+    reff = fs[3][1:] if hysics_dict['phase']=='Liquid Water' else fs[2][1:]
+    ff = file[0:-4] if hysics_dict['phase']=='Liquid Water' else file[0:-9]
+    verbosefile = verbose_path+ff+'_550nm_verbose.txt'
+    tau = rd.read_verbose(verbosefile,hysics_dict['phase'])
     
-    diff_dict = {'r_eff':[reff],'COT':tau,'difference':diff,\
+    diff_dict = {'phase':hysics_dict['phase'],'r_eff':[reff],'COT':tau,'difference':diff,\
         'wavelengths':hysics_dict['wl'],'num_retrieval_wavelengths':wl_num,'retrieval_wavelengths':wl_list}
     return diff_dict;
 
 
-def disagreement_all_LRT(hysics_dict, solar_dict, wl_num, wl_list, path):
+def disagreement_all_LRT(hysics_dict, solar_dict, wl_num, wl_list, phase_dict):
     reff_list = [] ; COT_list = [] ; diff_list = []
-    for f in os.listdir(path):
+    for f in os.listdir(phase_dict['LRT_path']):
         if f.endswith(".dat"):
-            diff_dict = disagreement_algorithm(hysics_dict, solar_dict, wl_num, wl_list, path, f)
+            diff_dict = disagreement_algorithm(hysics_dict, solar_dict, wl_num, wl_list, phase_dict['LRT_path'], f, phase_dict['LRT_verbose_path'])
             reff_list.append(diff_dict['r_eff'])
             COT_list.append(diff_dict['COT'])   
             diff_list.append(diff_dict['difference'])
@@ -89,7 +91,7 @@ def disagreement_all_LRT(hysics_dict, solar_dict, wl_num, wl_list, path):
     reff_best = float(reff_float[idx_diff])
     COT_best = float(COT_float[idx_diff])  
     
-    analysis_dict = {'r_eff':reff_float,'COT':COT_float,'difference':diff_list, \
+    analysis_dict = {'phase':hysics_dict['phase'],'r_eff':reff_float,'COT':COT_float,'difference':diff_list, \
         'wavelengths':diff_dict['wavelengths'],'num_retrieval_wavelengths':wl_num,'retrieval_wavelengths':wl_list, \
             'best_index':idx_diff,'best_COT':COT_best,'best_reff':reff_best,'best_difference':val_diff}
     return(analysis_dict);

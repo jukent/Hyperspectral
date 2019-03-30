@@ -10,17 +10,17 @@ import csv
 import scipy.io
 import os
 
-def read_HySICS(file):
-    wlHy = scipy.io.readsav(file)
+def read_HySICS(phase_dict):
+    wlHy = scipy.io.readsav(phase_dict['HySICS_wl_path'])
     wlHy = wlHy['wlsample']
-    wlHyf=wlHy[0:-27]
-    thincloud = np.load('thincloud.npy')
-    thincloudf=thincloud[0:-27]
-    hysics_dict = {'wl':wlHyf,'data':thincloudf}
+    wlHyf=wlHy[0:-27] if phase_dict['phase']=='Liquid Water' else wlHy[35:-27]
+    cloud = np.load(phase_dict['HySICS_data_path'])
+    cloudf=cloud[0:-27] if phase_dict['phase'] =='Liquid Water' else cloud[35:-27]
+    hysics_dict = {'wl':wlHyf,'data':cloudf,'phase':phase_dict['phase']}
     return hysics_dict;
 
 
-def read_LRT(file):
+def read_LRT(file,phase):
     data = [x for x in csv.reader(open(file,'r'),delimiter='\t')]  
     data = data[5:]
     wl=[]           #Wavelength (nm)
@@ -28,29 +28,32 @@ def read_LRT(file):
     
     loops = int(len(data)/3)
     for n in range(loops):
-        nwl = np.float(data[3*n+1][0][1:9])
-        ndirL = np.float(data[3*n+3][0][9:24])      
+        w = data[3*n+1][0][1:9] if phase=='Liquid Water' else data[3*n][0][1:9]
+        nwl = np.float(w)
+        d = data[3*n+3][0][9:24] if phase =='Liquid Water' else data[3*n+2][0][9:24]
+        ndirL = np.float(d)      
         wl.append(nwl)
         dirL.append(ndirL)    
     dirLW = [i*10**-3 for i in dirL] #convert to W/m^2/nm/sr
     return(wl,dirLW);
     
 
-def read_all_LRT(LRT_path):
-    LRTfiles = os.listdir(LRT_path) 
+def read_all_LRT(phase_dict):
+    LRTfiles = os.listdir(phase_dict['LRT_path']) 
     LRT_vals = []
     for f in LRTfiles:
         if f.endswith(".dat"):
-            (wl,LRT_val) = read_LRT(LRT_path+'/'+f)
+            (wl,LRT_val) = read_LRT(phase_dict['LRT_path']+'/'+f,phase_dict['phase'])
             LRT_vals.append(LRT_val)  
-    LRT_dict = {'wl':wl,'data':LRT_vals}
+    LRT_dict = {'wl':wl,'data':LRT_vals,'phase':phase_dict['phase']}
     return LRT_dict;
 
     
-def read_verbose(file):
+def read_verbose(file,phase):
     data = [x for x in open(file,'r')]
     a = data.index('Using new intensity correction, with phase functions\n')
-    tau = data[a:][67].split('|')[4].split()[0]
+    n=4 if phase=='Liquid Water' else 5
+    tau = data[a:][67].split('|')[n].split()[0]
     return(tau);
 
 
