@@ -7,7 +7,7 @@ Created on Thu Mar 28 23:15:49 2019
 from scipy.interpolate import interp1d
 import numpy as np
 import os
-import help_read as rd
+import help_analysis_read as rd
 
 def calc_HySICS_reflectance(hysics_dict,solar_dict):    
     f=interp1d(solar_dict['wl'],solar_dict['flux'])
