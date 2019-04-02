@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from help_analysis_read import read_all_LRT, read_solar
-from hel_analysis import calc_HySICS_reflectance, disagreement_all_LRT
+from hel_analysis import calc_HySICS_reflectance, disagreement_all_LRT, mask_ground
 from help_analysis_plot import plot_all_LRT, chi_sq_contour, plot_algorithm_comparison, plot_best_fits
 import generate_rgb_cube
 
@@ -35,28 +35,48 @@ xx = len(data_cube[:,0,0])
 yy = len(data_cube[0,:,0])
 tau_scene = zeros(xx,yy)
 reff_scene = zeros(xx,yy)
+mask = zeros(xx,yy)
 
 for x in np.arange(0,xx):
-    for y in np.arange(0,yy):
-        hysics_data = [x,y,:]
-        hysics_dict = {'wl':wl_list,'data':hysics_data,'phase':phase_dict['phase']}
-        rgb_pixel = [x,y,:]
+        for y in np.arange(0,yy):
+                rgb_pixel = rgb[x,y,:]
+                mask_ground[x,y]  = mask_ground(rgb_pixel)
 
-        hysics_dict = calc_HySICS_reflectance(hysics_dict,solar_dict)
-        hysics_dict = mask_clouds(hysics_dict,rgb_pixel)
+                if (mask_ground[x,y] == True): #Ground -- No Clouds
+                        tau_scene[x,y] = 'NaN'
+                        reff_scene[x,y] = 'NaN'
+                        
+                elif (mask_ground[x,y] == False): #No Ground -- Yes Clouds
+                        hysics_data = [x,y,:]
+                        hysics_dict = {'wl':wl_list,'data':hysics_data,'phase':phase_dict['phase']}
+                        hysics_dict= calc_HySICS_reflectance(hysics_dict,solar_dict)
+                        
+                        analysis_dict = disagreement_all_LRT(hysics_dict, wl_num, phase_dict) 
+                        tau_scene[x,y] = analysis_dict['best_COT']
+                        reff_scene[x,y] = analysis_dict['best_reff']
 
-        analysis_dict = disagreement_all_LRT(hysics_dict, wl_num, phase_dict) 
-        tau_scene[x,y] = analysis_dict['best_COT']
-        reff_scene[x,y] = analysis_dict['best_reff']
 
-#Cloud Mask
-def mask_clouds(hysics_dict,rgb_pixel):
-    data = hysics_dict['data']
-    if (np.abs(rgb[0]/rgb[1] - rgb[2]/rgb[1]) > 0.2):
-        [i='NaN' for i in data]
-    hysics_dict['data']=data
-    return hysics_dict;
+#Check Mask
+fig, axs = plt.subplots(1,2,sharex=True)
+ax1 = axs[0]
+ax1.imshow(rgb)
+
+rgb_masked = rgb*mask_ground
+ax2 = axs[1]
+ax2.imshow(rgb_masked)
+
 
 #Plot tau_scene and reff_scene -- Needs Testing
-plt.scatter(data_cube[:,0,0],data_cube[0,:,0],c=tau_scene)
-plt.scatter(data_cube[:,0,0],data_cube[0,:,0],c=reff_scene)
+fig, axs = plt.subplots(1,2,sharex=True)
+
+ax1  = axs0]
+ax1.gca().patch.set_color('xkcd:tan') #'xkcd:olive' 'xkcd:khaki' 'xkcd:green'
+ax1.contour(z=tau_scene,cmap='Reds',corner_mask=corner_mask)
+a = ax1.colorbar()
+a.set_label('Cloud Optical Thickness')
+
+ax2  = axs1]
+ax2.gca().patch.set_color('xkcd:tan') #'xkcd:olive' 'xkcd:khaki' 'xkcd:green'
+ax2.contour(z=reff_scene,cmap='Blues',corner_mask=corner_mask)
+b = ax2.colorbar()
+b.set_label('Effective Radius (um)')

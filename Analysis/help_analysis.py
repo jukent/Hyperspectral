@@ -9,6 +9,7 @@ import numpy as np
 import os
 import help_analysis_read as rd
 
+
 def calc_HySICS_reflectance(hysics_dict,solar_dict):    
     f=interp1d(solar_dict['wl'],solar_dict['flux'])
     flux_sol_new = f(hysics_dict['wl'])
@@ -41,6 +42,7 @@ def find_retrieval_wavelengths(num_wl):
     return wl_list;
     if (num_wl ==5):
         wl_list=[[750], [1000], [1200], [1660], [2200]]
+
 
 def disagreement_algorithm(hysics_dict, wl_num, wl_list, path, file, verbose_path):  
     refl_LRT = calc_LRT_reflectance(hysics_dict,path+file)
@@ -106,3 +108,11 @@ def shift_hysics(hysics_dict):
     hysics_dict['wl']=wl
     return hysics_dict;    
         
+
+def mask_ground(rgb_pixel):
+        if (np.abs(rgb[0]/rgb[1] - rgb[2]/rgb[1]) > 0.2):
+                mask_pixel = True
+        else:
+                mask_pixel = False
+        hysics_dict['data']=data
+        return mask_pixel;
