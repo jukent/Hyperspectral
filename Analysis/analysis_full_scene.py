@@ -39,8 +39,7 @@ mask = zeros(xx,yy)
 
 for x in np.arange(0,xx):
         for y in np.arange(0,yy):
-                rgb_pixel = rgb[x,y,:]
-                mask_ground[x,y]  = mask_ground(rgb_pixel)
+                mask_ground[x,y]  = mask_ground(rgb[x,y,:])
 
                 if (mask_ground[x,y] == True): #Ground -- No Clouds
                         tau_scene[x,y] = 'NaN'
@@ -69,13 +68,13 @@ ax2.imshow(rgb_masked)
 #Plot tau_scene and reff_scene -- Needs Testing
 fig, axs = plt.subplots(1,2,sharex=True)
 
-ax1  = axs0]
+ax1  = axs[0]
 ax1.gca().patch.set_color('xkcd:tan') #'xkcd:olive' 'xkcd:khaki' 'xkcd:green'
 ax1.contour(z=tau_scene,cmap='Reds',corner_mask=corner_mask)
 a = ax1.colorbar()
 a.set_label('Cloud Optical Thickness')
 
-ax2  = axs1]
+ax2  = axs[1]
 ax2.gca().patch.set_color('xkcd:tan') #'xkcd:olive' 'xkcd:khaki' 'xkcd:green'
 ax2.contour(z=reff_scene,cmap='Blues',corner_mask=corner_mask)
 b = ax2.colorbar()
