@@ -7,6 +7,7 @@ Created on Sun Feb 25 11:31:52 2018
 rho_i = 0.917*10**6 #g/m^3
 Z = [10,9,8,7]
 DZ = (Z[0]-Z[-1])*10**3
+
 #Values from Twomey and Cocks 1989
 tau = [1,1.5,2,3,4,6,8,12,16,24,32,48,64,96,128,192,20,28,36,40,44,52,56 \
        ,60,68,92,100,104,108,112,116,120,124,132,136,140,144,148,152,156,160,164,168,172,176,180,184,188]
@@ -29,9 +30,9 @@ for t in tau:
             line = str("\t".join([str(Z[d+1]),str(IWC),str(r)]))
             f.write('{}\n'.format(line))
         f.close()
-#
+
 ##Call up the Ice Files in UVSPEC input file
-habits=['rough-aggregate']#['ghm','solid-column','rough-aggregate']
+habits=['ghm']#['ghm','solid-column','rough-aggregate']
 inputs = []
 for file in files:
     for habit in habits:
