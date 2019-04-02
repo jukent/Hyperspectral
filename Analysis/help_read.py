@@ -28,12 +28,16 @@ def read_LRT(file,phase):
     
     loops = int(len(data)/3)
     for n in range(loops):
-        w = data[3*n+1][0][1:9] if phase=='Liquid Water' else data[3*n][0][1:9]
-        nwl = np.float(w)
-        d = data[3*n+3][0][9:24] if phase =='Liquid Water' else data[3*n+2][0][9:24]
-        ndirL = np.float(d)      
+        if phase =='Liquid Water':           
+            nwl = np.float(data[3*n+1][0][1:9])
+            ndirL = np.float(data[3*n+3][0][9:24]) 
+        else:
+            nwl = np.float(data[3*n][0][1:9])
+            ndirL = np.float(data[3*n+2][0][9:24])
+
         wl.append(nwl)
-        dirL.append(ndirL)    
+        dirL.append(ndirL)
+
     dirLW = [i*10**-3 for i in dirL] #convert to W/m^2/nm/sr
     return(wl,dirLW);
     
@@ -43,7 +47,7 @@ def read_all_LRT(phase_dict):
     LRT_vals = []
     for f in LRTfiles:
         if f.endswith(".dat"):
-            (wl,LRT_val) = read_LRT(phase_dict['LRT_path']+'/'+f,phase_dict['phase'])
+            (wl,LRT_val) = read_LRT(phase_dict['LRT_path']+f,phase_dict['phase'])
             LRT_vals.append(LRT_val)  
     LRT_dict = {'wl':wl,'data':LRT_vals,'phase':phase_dict['phase']}
     return LRT_dict;

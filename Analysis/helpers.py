@@ -12,36 +12,38 @@ import help_read as rd
 def calc_HySICS_reflectance(hysics_dict,solar_dict):    
     f=interp1d(solar_dict['wl'],solar_dict['flux'])
     flux_sol_new = f(hysics_dict['wl'])
-    solar_dict['flux_interp']=flux_sol_new
     
     refl_HySICS= [np.pi*hysics_dict['data'][w]/flux_sol_new[w] \
         for w in np.arange(0,len(hysics_dict['wl']))]
+    
     hysics_dict['refl'] = refl_HySICS
-    return (hysics_dict, solar_dict);
+    hysics_dict['solar_flux'] = flux_sol_new
+    return hysics_dict;
 
 
-def calc_LRT_reflectance(hysics_dict,solar_dict,file):   
+def calc_LRT_reflectance(hysics_dict,file):   
     (x,y) = rd.read_LRT(file,hysics_dict['phase'])
     f = interp1d(x,y)
-    ynew = f(hysics_dict['wl'])
-    refl_LRT = [np.pi*ynew[w]/solar_dict['flux_interp'][w] \
-        for w in np.arange(0,len(hysics_dict['wl']))]
+    xnew = f(hysics_dict['wl'][1:])
+    refl_LRT = [np.pi*xnew[w]/hysics_dict['solar_flux'][w] \
+        for w in np.arange(0,len(hysics_dict['wl'][1:]))]
     return refl_LRT;
 
 
 def find_retrieval_wavelengths(num_wl): 
     if num_wl%5 !=0: print('Number of wavelengths in algorithm must be a factor of 5.')
-    wl_lims = [[600,750], [980,1010], [1200,1300], [1500,1750], [2100,2200]]
+    wl_lims = [[600,750], [980,1050], [1220,1320], [1500,1750], [2100,2200]]
     wl_list = []
     num = num_wl/5
     for w in np.arange(0,5):
         wl = np.linspace(wl_lims[w][0],wl_lims[w][1],num)
         wl_list.append(wl)
     return wl_list;
+    if (num_wl ==5):
+        wl_list=[[750], [1000], [1200], [1660], [2200]]
 
-
-def disagreement_algorithm(hysics_dict, solar_dict, wl_num, wl_list, path, file, verbose_path):  
-    refl_LRT = calc_LRT_reflectance(hysics_dict,solar_dict,path+'/'+file)
+def disagreement_algorithm(hysics_dict, wl_num, wl_list, path, file, verbose_path):  
+    refl_LRT = calc_LRT_reflectance(hysics_dict,path+file)
     idx_1 = (np.abs(hysics_dict['wl'] - wl_list[0][0])).argmin()
     
     sigma_all = []
@@ -76,11 +78,13 @@ def disagreement_algorithm(hysics_dict, solar_dict, wl_num, wl_list, path, file,
     return diff_dict;
 
 
-def disagreement_all_LRT(hysics_dict, solar_dict, wl_num, wl_list, phase_dict):
+def disagreement_all_LRT(hysics_dict, wl_num, phase_dict):
+    wl_list = find_retrieval_wavelengths(wl_num) 
+    
     reff_list = [] ; COT_list = [] ; diff_list = []
     for f in os.listdir(phase_dict['LRT_path']):
         if f.endswith(".dat"):
-            diff_dict = disagreement_algorithm(hysics_dict, solar_dict, wl_num, wl_list, phase_dict['LRT_path'], f, phase_dict['LRT_verbose_path'])
+            diff_dict = disagreement_algorithm(hysics_dict, wl_num, wl_list, phase_dict['LRT_path'], f, phase_dict['LRT_verbose_path'])
             reff_list.append(diff_dict['r_eff'])
             COT_list.append(diff_dict['COT'])   
             diff_list.append(diff_dict['difference'])
@@ -97,5 +101,8 @@ def disagreement_all_LRT(hysics_dict, solar_dict, wl_num, wl_list, phase_dict):
     return(analysis_dict);
 
     
-    
+def shift_hysics(hysics_dict):
+    wl = [x+5.77 for x in hysics_dict['wl']]
+    hysics_dict['wl']=wl
+    return hysics_dict;    
         
