@@ -102,7 +102,7 @@ def disagreement_all_LRT(hysics_dict, wl_num, phase_dict):
 
     
 def shift_hysics(hysics_dict):
-    wl = [x+5.77 for x in hysics_dict['wl']]
+    wl = [x+4 for x in hysics_dict['wl']]
     hysics_dict['wl']=wl
     return hysics_dict;    
         
