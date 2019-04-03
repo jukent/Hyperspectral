@@ -122,10 +122,7 @@ def rgb_idx(data,wl_list):
     return (rgb_idx_list,rgb);       
 
 
-def mask_ground(hysics_dict):
-    data = hysics_dict['data']
-    wl_list = hysics_dict['wl']
-    rgb_idx_list,rgb = rgb_idx(data,wl_list)  
-    st_dev = np.std(rgb)   
-    mask_pixel = True if (st_dev > 0.06) else False
-    return (st_dev, mask_pixel);
+def mask_ground(rgb_pixel): 
+    mean = np.mean(rgb_pixel)   
+    mask_pixel = mean > 0.75
+    return mask_pixel;

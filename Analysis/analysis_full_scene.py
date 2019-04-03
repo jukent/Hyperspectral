@@ -29,50 +29,35 @@ phase_dict = water_dict
 solar_dict = read_solar(solar_path)
 hysics_wl = dc.read_HySICS_wl(phase_dict) #values already shifted by 4 nm
 
-path = phase_dict['HySICS_data_path']
-files = [os.path.join(path,f) for f in os.listdir(path) if f.startswith('img')]
-testfiles = files[0:1050]
-data_cube = dc.find_data_cube_radiances(testfiles)
 data_cube = np.load('data_cube_water.npy')
-data_cube = np.load('data_cube_ice.npy')
+rgb = np.load(phase_dict['rgb_path'])
 
 xx = len(data_cube[:,0,0])
 yy = len(data_cube[0,:,0])
 
 tau_scene = np.zeros((xx,yy), dtype = float)
 reff_scene = np.zeros((xx,yy), dtype = float)
-sdev_scene = np.zeros((xx,yy), dtype = float)
+mean_scene = np.zeros((xx,yy), dtype = float)
 mask = np.zeros((xx,yy), dtype = float)
 
 for y in tqdm(np.arange(0,yy)):
     for x in np.arange(0,xx):
-        pixel = data_cube[x,y,:]
-        hysics_data = pixel[0:-27] if phase_dict['phase'] == 'Liquid Water' else pixel[35:-27]
-        hysics_dict = {'wl':hysics_wl,'data':pixel,'phase':phase_dict['phase']}
-        
-        st_dev, mask_pixel  = mask_ground(hysics_dict)
-        print(mask_pixel)
-        sdev_scene[x,y] = st_dev
-        if (mask_pixel == True): #Ground -- No Clouds
-            tau_scene[x,y] = 'NaN'
-            reff_scene[x,y] = 'NaN'                        
-        elif (mask_pixel == False): #No Ground -- Yes Clouds
-            hysics_dict= calc_HySICS_reflectance(hysics_dict,solar_dict)
-            analysis_dict = disagreement_all_LRT(hysics_dict, wl_num, phase_dict) 
-            tau_scene[x,y] = analysis_dict['best_COT']
-            reff_scene[x,y] = analysis_dict['best_reff']
+        mean = np.mean(rgb[x,y])
+        if (mean<0.75): #No Clouds
+                tau_scene[x,y] = 'NaN'
+                reff_scene[x,y] = 'NaN'
+        elif:
+                pixel = data_cube[x,y,:]
+                hysics_data = pixel[0:-27] if phase_dict['phase'] == 'Liquid Water' else pixel[35:-27]
+                hysics_dict = {'wl':hysics_wl,'data':pixel,'phase':phase_dict['phase']}
+                
+                hysics_dict= calc_HySICS_reflectance(hysics_dict,solar_dict)
+                analysis_dict = disagreement_all_LRT(hysics_dict, wl_num, phase_dict) 
+                
+                tau_scene[x,y] = analysis_dict['best_COT']
+                reff_scene[x,y] = analysis_dict['best_reff']
 
 
-##Check Mask
-#fig, axs = plt.subplots(1,2,sharex=True)
-#ax1 = axs[0]
-#ax1.imshow(rgb)
-#
-#rgb_masked = rgb*mask_ground
-#ax2 = axs[1]
-#ax2.imshow(rgb_masked)
-#
-#
 ##Plot tau_scene and reff_scene -- Needs Testing
 #fig, axs = plt.subplots(1,2,sharex=True)
 #
