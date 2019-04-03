@@ -42,7 +42,7 @@ def two_percent_linear_stretch(x,idx):
     return c_scaled;
 
 
-def rgb_idx(wl_list):
+def find_rgb_idx(wl_list):
     r_idx = np.argmin([np.abs(670 - x) for x in wl_list])
     g_idx = np.argmin([np.abs(555 - x) for x in wl_list])
     b_idx = np.argmin([np.abs(443 - x) for x in wl_list])
@@ -51,7 +51,7 @@ def rgb_idx(wl_list):
 
 
 def apply_stretch(data_cube,wl_list):
-    rgb_idx_list = rgb_idx(wl_list)
+    rgb_idx_list = find_rgb_idx(wl_list)
     
     red = two_percent_linear_stretch(data_cube,rgb_idx_list[0])
     green = two_percent_linear_stretch(data_cube,rgb_idx_list[1])

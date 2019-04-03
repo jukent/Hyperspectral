@@ -59,3 +59,4 @@ def generate_datacube(phase_dict,wl_list)
     return datacube;
 
 datacube_dvc = generate_datacube(phase_dict,wl_list)
+datacube_dvc.to_netcdf('datacube_dvc.nc',format='NETCDF4')
