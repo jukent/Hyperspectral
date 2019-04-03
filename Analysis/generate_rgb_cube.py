@@ -10,23 +10,32 @@ but adapted for the HySICS csv img files
 
 #import modules
 import os
+import matplotlib.pyplot as plt
 import help_data_cube as dc
 
+HySICS_wl_path = '../../../CU Boulder/LASP/LASP py/HySICS Data/WLHysics.sav'
+HySICS_LW_data_path = '..\..\LASP py\HySICS Data\Thick_clouds1\img'
+HySICS_IC_data_path = '..\LASP py\HySICS Data\Desert_vegetation_clouds'
 
-#Function for creating the datacube and a linear stretched rgb image
-def generate_datacube(path):
+water_dict = {'HySICS_wl_path':HySICS_wl_path,'HySICS_data_path':HySICS_LW_data_path,'phase':'Liquid Water'}
+ice_dict = {'HySICS_wl_path':HySICS_wl_path,'HySICS_data_path':HySICS_IC_data_path,'phase':'Ice'}
+
+#phase_dict=water_dict
+phase_dict=ice_dict
+
+def generate_datacube(phase_dict):
+    path = phase_dict['HySICS_data_path']
     files = [os.path.join(path,f) for f in os.listdir(path) if f.startswith('img')]
     testfiles = files[0:1050]
     
     data_cube = dc.find_data_cube_radiances(testfiles)
-    wl_list, rgb_idx = dc.find_wl_data(path)  
-    rgb = dc.apply_stretch(data_cube,rgb_idx)
+    wl_list = dc.read_HySICS_wl(phase_dict)
+    rgb = dc.apply_stretch(data_cube,wl_list)
     
     return(data_cube,wl_list,rgb);
 
-path = '..\LASP py\HySICS Data\Thick_clouds1\img'
-#path = '..\LASP py\HySICS Data\Desert_vegetation_clouds'
-(data_cube,wl_list,rgb_idx,rgb) = datacube(path)
+
+(data_cube,wl_list,rgb) = generate_datacube(phase_dict)
 
 plt.imshow(rgb)    
 dc.displaycube(data_cube, rgb)

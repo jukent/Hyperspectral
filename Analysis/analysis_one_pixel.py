@@ -31,19 +31,24 @@ water_dict = {'solar_path':solar_path,'HySICS_wl_path':HySICS_wl_path,'HySICS_da
 ice_dict = {'solar_path':solar_path,'HySICS_wl_path':HySICS_wl_path,'HySICS_data_path':HySICS_IC_data_path, \
               'LRT_path':LRT_IC_path,'LRT_verbose_path':verbose_IC_path, 'phase':'Ice'}
 
-#phase_dict=water_dict
-phase_dict=ice_dict
+phase_dict=water_dict
+#phase_dict=ice_dict
 
 solar_dict = read_solar(solar_path)
 hysics_dict = read_HySICS(phase_dict) 
 hysics_dict = shift_hysics(hysics_dict)
+
+from help_analysis import rgb_idx
+rgb_idx_list,rgb = rgb_idx(hysics_dict['data'],hysics_dict['wl'])
+st_dev = np.std(rgb)
+
 hysics_dict = calc_HySICS_reflectance(hysics_dict,solar_dict)
 LRT_dict = read_all_LRT(phase_dict) 
 
 plot_all_LRT(LRT_dict,hysics_dict)    
 
 
-nums=np.arange(0,20)
+nums=np.arange(2,3)
 dict_of_analysis_dicts={}
 for n in nums:
     wl_num = (n+1)*5

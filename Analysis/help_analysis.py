@@ -107,12 +107,25 @@ def shift_hysics(hysics_dict):
     wl = [x+4 for x in hysics_dict['wl']]
     hysics_dict['wl']=wl
     return hysics_dict;    
-        
 
-def mask_ground(rgb_pixel):
-        if (np.abs(rgb[0]/rgb[1] - rgb[2]/rgb[1]) > 0.2):
-                mask_pixel = True
-        else:
-                mask_pixel = False
-        hysics_dict['data']=data
-        return mask_pixel;
+
+def rgb_idx(data,wl_list):
+    r_idx = np.argmin([np.abs(670 - x) for x in wl_list])
+    g_idx = np.argmin([np.abs(555 - x) for x in wl_list])
+    b_idx = np.argmin([np.abs(443 - x) for x in wl_list])
+    rgb_idx_list = [r_idx,g_idx,b_idx]
+    
+    r = data[r_idx]
+    g = data[g_idx]
+    b = data[b_idx]  
+    rgb = [r,g,b]
+    return (rgb_idx_list,rgb);       
+
+
+def mask_ground(hysics_dict):
+    data = hysics_dict['data']
+    wl_list = hysics_dict['wl']
+    rgb_idx_list,rgb = rgb_idx(data,wl_list)  
+    st_dev = np.std(rgb)   
+    mask_pixel = True if (st_dev > 0.06) else False
+    return (st_dev, mask_pixel);

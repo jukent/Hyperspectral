@@ -20,6 +20,13 @@ def read_HySICS(phase_dict):
     return hysics_dict;
 
 
+def read_HySICS_wl(phase_dict):
+    hysics_wl = scipy.io.readsav(phase_dict['HySICS_wl_path'])
+    hysics_wl = hysics_wl['wlsample']
+    hysics_wl = hysics_wl[0:-27] if phase_dict['phase']=='Liquid Water' else hysics_wl[35:-27]
+    return hysics_wl;
+
+
 def read_LRT(file,phase):
     data = [x for x in csv.reader(open(file,'r'),delimiter='\t')]  
     data = data[5:]

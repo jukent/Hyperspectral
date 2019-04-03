@@ -1,9 +1,9 @@
 import csv
+import scipy
 import numpy as np
 from skimage import exposure
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 #Radiance Data
 def find_data_cube_radiances(testfiles):
@@ -27,29 +27,13 @@ def find_data_cube_radiances(testfiles):
 
 
 #Wavelengh Data
-def find_wl_data(path):
-    wl_file = open(os.path.join(path,'wavelength.txt'))
-    wl_reader = csv.reader(wl_file)
-    wl_list = []
-    for row in wl_reader:
-        newrow = []
-        for i in np.arange(len(row)):
-            element = float(row[i])
-            newrow.append(element)
-        wl_list.append(newrow) 
-    WLfile.close()
-    wl_list = np.array(wl_list)
-    
-    #HySICS 4nm wavelength shift
-    wl_list = [x+4 for x in wl_list]
-    #Filter wl_list but by how much????
+def read_HySICS_wl(phase_dict):
+    hysics_wl = scipy.io.readsav(phase_dict['HySICS_wl_path'])
+    hysics_wl = hysics_wl['wlsample']
+    hysics_wl = hysics_wl[0:-27] if phase_dict['phase']=='Liquid Water' else hysics_wl[35:-27]
+    hysics_wl = [x+4 for x in hysics_wl]
+    return hysics_wl;
 
-    #Find RGB indices
-    r_idx = np.argmin(np.abs(670 - wl_list))
-    g_idx = np.argmin(np.abs(555 - wl_list))
-    b_idx = np.argmin(np.abs(443 - wl_list))
-    rgb_idx_dict = {'red_index':r_idx,'green_index':g_idx,'blue_index':b_idx}
-    return (wl_list,rgb_idx_dict);
 
 def two_percent_linear_stretch(x,idx):
     c = x[:,:,idx]/np.amax(x[:,:,idx])
@@ -57,20 +41,27 @@ def two_percent_linear_stretch(x,idx):
     c_scaled = exposure.rescale_intensity(c, in_range=(p2, p98))
     return c_scaled;
 
-#Apply a 2% Linear Stretch
-def apply_stretch(data_cube,rgb_idx)
-    red = two_percent_linear_stretch(data_cube,rgb_idx['red_index'])
-    green = two_percent_linear_stretch(data_cube,rgb_idx['green_index'])
-    blue = two_percent_linear_stretch(data_cube,rgb_idx['blue_index'])
 
-    #Recombine the stretched rgb channels
+def rgb_idx(wl_list):
+    r_idx = np.argmin([np.abs(670 - x) for x in wl_list])
+    g_idx = np.argmin([np.abs(555 - x) for x in wl_list])
+    b_idx = np.argmin([np.abs(443 - x) for x in wl_list])
+    rgb_idx_list = [r_idx,g_idx,b_idx]
+    return (rgb_idx_list); 
+
+
+def apply_stretch(data_cube,wl_list):
+    rgb_idx_list = rgb_idx(wl_list)
+    
+    red = two_percent_linear_stretch(data_cube,rgb_idx_list[0])
+    green = two_percent_linear_stretch(data_cube,rgb_idx_list[1])
+    blue = two_percent_linear_stretch(data_cube,rgb_idx_list[2])
+
     rgb = np.dstack((red,green,blue))
     return rgb;    
 
 
-#Modified z-score method for removing outliers 
-#This is done because the hyperspectral displays appeared monochrome
-def modified_z_score(data):
+def modified_z_score(data): #This is done because the hyperspectral displays appeared monochrome
     threshold = 2.5
     median = np.median(data)
     mad = np.median([np.abs(i - median) for i in data]) #median absolute deviation
@@ -78,10 +69,7 @@ def modified_z_score(data):
     return np.where(np.abs(mod_z_scores) > threshold)
 
 
-#Creating the Hyperspectral Data Cube
-#Makes a hypercube by treating it as a 3d plot with points on 3 surfaces
-#More efficient methods may exist
-def displaycube(data_cube,rgb):
+def displaycube(data_cube,rgb): #Makes a hypercube by treating it as a 3d plot with points on 3 surfaces
     imdata = np.flipud(rgb)
     dims = data_cube.shape
     res = 1
