@@ -1,4 +1,5 @@
 import xarray as xr
+import numpy as np
 
 datacube_dvc = xr.open_dataarray('datacube_dvc.nc',chunks=10)
 
