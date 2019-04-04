@@ -175,3 +175,10 @@ def calc_disagreement(refl_hysics,refl_lrt,retrieval_idx_list):
     disagreement.attrs['COT'] = refl_lrt.attrs['COT']
     disagreement.attrs['r_eff'] = refl_lrt.attrs['r_eff']
     return disagreement;
+
+
+def calc_best_diff(refl_hysics_pixel,refl_lrt_list, retrieval_idx_list):    
+    diff_list = [calc_disagreement(refl_hysics_pixel, r, retrieval_idx_list) for r in refl_lrt_list]
+        
+    best_diff, idx_diff = min((val, idx) for (idx, val) in enumerate(diff_list))
+    return(best_diff);
