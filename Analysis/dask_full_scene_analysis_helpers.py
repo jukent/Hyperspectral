@@ -2,7 +2,7 @@ import csv
 import numpy as np
 import xarray as xr
 from scipy.interpolate import interp1d
-import numba
+import os
 
 
 def read_verbose(verbose_file,phase):
@@ -63,8 +63,8 @@ def get_sample_lrt_radf(path,phase):
     files = [os.path.join(path,f) for f in os.listdir(path)]
     file = files[0]
     lrt_rad = read_LRT(file,phase)
-    lrt_radf = hlp.filter_LRT_wl(lrt_rad)
-    return lrt_radf_samp;
+    lrt_radf_samp = filter_LRT_wl(lrt_rad)
+    return (files, lrt_radf_samp);
 
 
 def interpolate_solar(lrt_radf,solar):
@@ -116,12 +116,11 @@ def find_retrieval_idx_list(retrieval_wl_list,solar_interp):
             val, idx = min((val, idx) for (idx, val) in enumerate(a))
             cols.append(int(idx))
         idx_list.append(cols)
-        return idx_list;
+    return idx_list;
 
 
-def gen_refl_lrt_list(path,phase,solar_interp):
+def gen_refl_lrt_list(files,phase,solar_interp):
     refl_lrt_list = []
-    files = [os.path.join(path,f) for f in os.listdir(path)]
     lrt_rads = [read_LRT(f,phase) for f in files if f.endswith('.dat')]
     lrt_radfs = [filter_LRT_wl(lrt_rad)for lrt_rad in lrt_rads]
     refl_lrts = [calc_LRT_reflectance(r,solar_interp) for r in lrt_radfs]
