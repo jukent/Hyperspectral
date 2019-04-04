@@ -111,35 +111,6 @@ def find_retrieval_idx_list(retrieval_wl_list,solar_interp):
         return idx_list;
 
 
-    def calc_disagreement(refl_hysics, refl_lrt, retrieval_wl_list):  
-    idx_1 = np.argmin([np.abs(retrieval_wl_list[0][0] - x) for x in refl_hysics.wavelength])
-    
-    sigma_all = []
-    for i in np.arange(0,5):
-        k=i+1
-        
-        sigma_k = []      
-        for j in np.arange(0,len(retrieval_wl_list[i])):
-            idx_wl = np.argmin([np.abs(retrieval_wl_list[i][j] - x) for x in refl_hysics.wavelength])
-            
-            reflectance_term = (5-k)**2*(refl_lrt.values[idx_wl]-refl_hysics.values[idx_wl])**2
-            ratio_term = (k-1)**2*(refl_lrt.values[idx_wl]/refl_lrt.values[idx_1]- \
-                                refl_hysics.values[idx_wl]/refl_hysics.values[idx_1])**2
-            
-            sigma_k_j = reflectance_term + ratio_term
-            sigma_k.append(sigma_k_j)
-        sigma_all.append(sigma_k)
-        
-    sigma = np.sum(sigma_all)
-    chi_sq = sigma/(len(retrieval_wl_list[0]*60)) 
-    diff = np.sqrt(chi_sq)*100
-    
-    disagreement = xr.DataArray(diff)
-    disagreement.attrs['COT'] = refl_lrt.attrs['COT']
-    disagreement.attrs['r_eff'] = refl_lrt.attrs['r_eff']
-    return disagreement;
-
-
 def gen_refl_lrt_list(path,phase,solar_interp):
     refl_lrt_list = []
     files = [os.path.join(path,f) for f in os.listdir(path)]
