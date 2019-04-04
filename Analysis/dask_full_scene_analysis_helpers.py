@@ -59,6 +59,14 @@ def filter_LRT_wl(lrt_rad):
     return lrt_radf;
 
 
+def get_sample_lrt_radf(path,phase):
+    files = [os.path.join(path,f) for f in os.listdir(path)]
+    file = files[0]
+    lrt_rad = read_LRT(file,phase)
+    lrt_radf = hlp.filter_LRT_wl(lrt_rad)
+    return lrt_radf_samp;
+
+
 def interpolate_solar(lrt_radf,solar):
     f = interp1d(solar.wavelength,solar.values,fill_value='NaN')
     solar_new = f(lrt_radf.wavelength)
