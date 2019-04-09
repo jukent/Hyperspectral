@@ -121,7 +121,7 @@ def find_retrieval_idx_list(retrieval_wl_list,solar_interp):
     return idx_list;
 
 
-def gen_refl_lrt_list(files,phase,solar_interp):
+def gen_refl_lrt_list(files,phase,solar_interp,phase):
     refl_lrt_list = []
     lrt_rads = [read_LRT(f,phase) for f in files if f.endswith('.dat')]
     lrt_radfs = [filter_LRT_wl(lrt_rad)for lrt_rad in lrt_rads]
