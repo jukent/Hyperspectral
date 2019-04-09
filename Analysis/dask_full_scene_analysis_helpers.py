@@ -75,8 +75,9 @@ def interpolate_solar(lrt_radf,solar):
     return solar_interp;
 
 
-def calc_LRT_reflectance(lrt_radf,solar_interp):
-    refl_lrt = [np.pi*lrt_radf.values[w]/solar_interp.values[w] for w in np.arange(0,len(lrt_radf.wavelength))]
+def calc_LRT_reflectance(lrt_radf,solar_interp,phase):
+    mu = np.cosd(38.5) if phase == 'Liquid Water' else np.cosd(56)
+    refl_lrt = [np.pi/mu*lrt_radf.values[w]/solar_interp.values[w] for w in np.arange(0,len(lrt_radf.wavelength))]
                                                                         
     refl_lrt = xr.DataArray(refl_lrt,dims=['wavelength'], name='lrt reflectances', coords={'wavelength':lrt_radf.wavelength})
     refl_lrt.attrs['COT'] = lrt_radf.attrs['COT']
@@ -84,11 +85,12 @@ def calc_LRT_reflectance(lrt_radf,solar_interp):
     return refl_lrt;
                           
 
-def calc_HySICS_reflectance(datacube,solar_interp,x,y):    
+def calc_HySICS_reflectance(datacube,solar_interp,phase,x,y):    
     f = interp1d(datacube.wavelength,datacube.values[x,y,:],fill_value='NaN')
     hy_new = f(solar_interp.wavelength)
     
-    refl_HySICS= [np.pi*hy_new[w]/solar_interp.values[w] for w in np.arange(0,len(solar_interp.wavelength))]
+    mu = np.cosd(38.5) if phase == 'Liquid Water' else np.cosd(56)
+    refl_HySICS= [np.pi/mu*hy_new[w]/solar_interp.values[w] for w in np.arange(0,len(solar_interp.wavelength))]
     
     refl_hysics_pixel = xr.DataArray(refl_HySICS,dims=['wavelength'], name='HySICS reflectance', coords={'wavelength':solar_interp.wavelength})
     return refl_hysics_pixel;
@@ -100,7 +102,7 @@ def find_retrieval_wavelengths(num_wl):
     if (num_wl ==5):
         retrieval_wl_list=[[750], [1000], [1200], [1660], [2200]]
     else:
-        wl_lims = [[600,750], [980,1050], [1220,1320], [1500,1750], [2100,2200]]
+        wl_lims = [[600,750], [1000,1080], [1240,1320], [1600,1750], [2100,2200]]
         num = num_wl/5
         retrieval_wl_list = [np.linspace(wl_lims[w][0],wl_lims[w][1],num) for w in np.arange(0,5)]
     
@@ -123,7 +125,7 @@ def gen_refl_lrt_list(files,phase,solar_interp):
     refl_lrt_list = []
     lrt_rads = [read_LRT(f,phase) for f in files if f.endswith('.dat')]
     lrt_radfs = [filter_LRT_wl(lrt_rad)for lrt_rad in lrt_rads]
-    refl_lrts = [calc_LRT_reflectance(r,solar_interp) for r in lrt_radfs]
+    refl_lrts = [calc_LRT_reflectance(r,solar_interp,phase) for r in lrt_radfs]
     return (refl_lrts);
 
 

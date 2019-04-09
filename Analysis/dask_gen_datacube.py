@@ -35,7 +35,7 @@ def read_HySICS_wl(phase_dict):
     hysics_wl = sio.readsav(phase_dict['HySICS_wl_path'])
     hysics_wl = hysics_wl['wlsample']
     hysics_wl = hysics_wl[0:-27] if phase_dict['phase']=='Liquid Water' else hysics_wl[35:-27]
-    hysics_wl = [x+4 for x in hysics_wl]
+    hysics_wl = [x+3.5 for x in hysics_wl]
     return hysics_wl;
 wl_list = read_HySICS_wl
 
